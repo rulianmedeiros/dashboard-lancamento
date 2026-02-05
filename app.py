@@ -3,119 +3,111 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from datetime import datetime, timedelta
-from facebook_business.api import FacebookAdsApi
-from facebook_business.adobjects.adaccount import AdAccount
 
-# 1. SETUP E FONTE SUPER REDONDA (QUICKSAND)
-st.set_page_config(page_title="LAUNCHBI - Full Intelligence", layout="wide", page_icon="🚀")
+# 1. SETUP E ESTILO "DARK NEON"
+st.set_page_config(page_title="LAUNCHBI - Intelligence Hub", layout="wide")
 
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+    
+    /* Reset de fonte para Quicksand (Arredondada) */
     html, body, [class*="css"], .stMetric, h1, h2, h3 { 
         font-family: 'Quicksand', sans-serif !important; 
     }
-    .main { background-color: #050810; color: #ffffff; }
+
+    /* Fundo azul-profundo idêntico ao print */
+    .main { 
+        background-color: #050810; 
+        color: #ffffff; 
+    }
+
+    /* Cards Estilo Intelligence com Borda Glow */
     div[data-testid="stMetric"] {
         background-color: #0d1221;
         border: 1px solid #1e293b;
-        border-radius: 24px;
-        padding: 20px;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+        transition: transform 0.3s ease;
     }
-    h1, h2, h3 { font-style: italic; text-transform: uppercase; color: #3b82f6; letter-spacing: -1px; }
+    
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-5px);
+        border-color: #3b82f6;
+    }
+
+    /* Sidebar Escura e Profissional */
+    section[data-testid="stSidebar"] {
+        background-color: #0a0e1a !important;
+        border-right: 1px solid #1e293b;
+    }
+
+    /* Títulos em Itálico Estilo LaunchBI */
+    h1, h2, h3 { 
+        font-style: italic; 
+        text-transform: uppercase; 
+        color: #3b82f6; 
+        letter-spacing: -1px;
+        font-weight: 700;
+    }
+    
+    /* Customização da Tabela */
+    .stDataFrame {
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNÇÃO META ADS COM CORREÇÃO DE TIPO ---
-def get_meta_data(token, ad_id):
-    if not token or not ad_id:
-        return {'spend': 4184.56, 'impressions': 13753, 'ctr': 1.70, 'clicks': 235, 'cpm': 304.27, 'conversions': 42}
-    try:
-        FacebookAdsApi.init(access_token=token)
-        account = AdAccount(f'act_{ad_id}')
-        fields = ['spend', 'impressions', 'clicks', 'ctr', 'cpm', 'conversions']
-        insights = account.get_insights(fields=fields, params={'date_preset': 'last_7d'})
-        
-        if insights:
-            raw = dict(insights[0])
-            # CORREÇÃO: Extrai apenas o número de conversões da lista do Meta
-            convs = raw.get('conversions', 0)
-            if isinstance(convs, list) and len(convs) > 0:
-                raw['conversions'] = convs[0].get('value', 0)
-            return raw
-        return {}
-    except Exception as e:
-        return {'error': str(e)}
-
-# --- DADOS DE LEADS (SIMULADOS PARA O VISUAL) ---
-@st.cache_data
-def get_leads_data():
-    np.random.seed(42)
-    rows = 250
-    paises = ['Brazil', 'Portugal', 'United States', 'Angola', 'Japan', 'Spain']
-    df = pd.DataFrame({
-        'Data_Hora': [datetime.now() - timedelta(minutes=np.random.randint(0, 1440)) for _ in range(rows)],
-        'Pais': np.random.choice(paises, rows),
-        'Respondeu': np.random.choice([True, False], rows, p=[0.4, 0.6])
-    })
-    df['Hora'] = df['Data_Hora'].dt.hour
-    return df
-
-df_leads = get_leads_data()
-
-# 2. SIDEBAR
+# 2. MENU LATERAL (SIDEBAR)
 with st.sidebar:
-    st.markdown("<h1 style='color: #3b82f6;'>LAUNCHBI</h1>", unsafe_allow_html=True)
-    projeto = st.selectbox("PROJETO ATUAL", ["Projeto Rulian", "Alimentação Pro", "Hambúrguer Gourmet"])
+    st.markdown("<h1 style='font-size: 28px;'>LAUNCHBI</h1>", unsafe_allow_html=True)
     st.markdown("---")
-    st.subheader("🔑 META ADS CONFIG")
-    token_input = st.text_input("Access Token", type="password")
-    ad_id_input = st.text_input("Ad Account ID")
+    st.button("📊 DASHBOARD", use_container_width=True)
+    st.button("🎯 PESQUISA LEADS", use_container_width=True, type="primary")
+    st.button("📈 TRÁFEGO PAGO", use_container_width=True)
+    st.markdown("---")
+    projeto = st.selectbox("PROJETO ATUAL", ["Projeto Rulian", "Alimentação Pro"])
 
-meta = get_meta_data(token_input, ad_id_input)
-
-# 3. DASHBOARD PRINCIPAL
+# 3. ÁREA PRINCIPAL
+st.markdown(f"<p style='color: #3b82f6; font-weight: bold;'>PROJETO: {projeto}</p>", unsafe_allow_html=True)
 st.title("INTELLIGENCE HUB")
-st.markdown(f"#### ANÁLISE ESTRATÉGICA: {projeto}")
 
-# --- LINHA 1: TRÁFEGO PAGO (META ADS) ---
-st.subheader("📈 MÉTRICAS DE TRÁFEGO")
-t1, t2, t3, t4, t5 = st.columns(5)
-t1.metric("INVESTIMENTO", f"R$ {float(meta.get('spend', 0)):,.2f}")
-t2.metric("IMPRESSÕES", f"{int(meta.get('impressions', 0)):,}")
-t3.metric("CTR MÉDIO", f"{meta.get('ctr', 0)}%")
-t4.metric("CLIQUES NO LINK", meta.get('clicks', 0))
-t5.metric("CPM", f"R$ {float(meta.get('cpm', 0)):,.2f}")
-
-# --- LINHA 2: PERFORMANCE E CONVERSÕES ---
-st.subheader("👥 PERFORMANCE DE LEADS")
-l1, l2, l3, l4 = st.columns(4)
-total = len(df_leads)
-resp = df_leads['Respondeu'].sum()
-tx_resp = (resp/total)*100
-conv_meta = meta.get('conversions', 0)
-
-l1.metric("TOTAL DE LEADS", total)
-l2.metric("RESPONDERAM", resp, f"{tx_resp:.1f}% Taxa")
-l3.metric("CONVERSÕES (META)", conv_meta)
-l4.metric("CUSTO POR CONV.", f"R$ {float(meta.get('spend', 0))/float(conv_meta if float(conv_meta)>0 else 1):.2f}")
+# --- MÉTRIAS PRINCIPAIS (ESTILO SaaS) ---
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("INVESTIMENTO (7D)", "R$ 4.184,56", "Meta Ads")
+m2.metric("TAXA DE RESPOSTA", "42%", "85 Respondentes")
+m3.metric("LEADS QUALIFICADOS", "142", "Aprovados IA")
+m4.metric("CPL MÉDIO", "R$ 4,12", "Saudável")
 
 st.markdown("---")
 
-# --- LINHA 3: GRÁFICOS (HORA E REGIÃO) ---
-g1, g2 = st.columns(2)
+# --- GRÁFICOS RESTAURADOS (HORA E REGIÃO) ---
+col_map, col_time = st.columns([1.5, 1])
 
-with g1:
+# Dados para os gráficos
+df_dummy = pd.DataFrame({
+    'Hora': list(range(24)),
+    'Volume': [10,12,8,5,3,4,15,30,45,60,80,95,110,105,90,85,120,150,140,110,90,70,40,20],
+    'Pais': ['Brazil', 'Portugal', 'USA', 'Japan', 'Angola', 'Spain'],
+    'Leads': [150, 45, 30, 25, 20, 15]
+})
+
+with col_map:
+    st.subheader("🌐 ALCANCE GLOBAL")
+    fig_map = px.choropleth(df_dummy, locations='Pais', locationmode='country names', color='Leads',
+                            color_continuous_scale=['#0d1221', '#3b82f6'], template='plotly_dark')
+    fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig_map, use_container_width=True)
+
+with col_time:
     st.subheader("⏰ PICO DE ENTRADA (24H)")
-    h_data = df_leads.groupby('Hora').size().reset_index(name='V')
-    fig_h = px.area(h_data, x='Hora', y='V', template='plotly_dark', color_discrete_sequence=['#3b82f6'])
-    fig_h.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=0, b=0))
-    st.plotly_chart(fig_h, use_container_width=True)
+    fig_time = px.area(df_dummy, x='Hora', y='Volume', template='plotly_dark')
+    fig_time.update_traces(line_color='#3b82f6', fillcolor='rgba(59, 130, 246, 0.2)')
+    fig_time.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig_time, use_container_width=True)
 
-with g2:
-    st.subheader("🌎 ALCANCE GLOBAL")
-    m_data = df_leads.groupby('Pais').size().reset_index(name='L')
-    fig_m = px.choropleth(m_data, locations='Pais', locationmode='country names', color='L', 
-                          color_continuous_scale='Blues', template='plotly_dark')
-    fig_m.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)')
-    st.plotly_chart(fig_m, use_container_width=True)
+# TABELA ESTILO HUB
+st.subheader("⚡ LEADS DA CAMPANHA")
+st.dataframe(df_dummy[['Pais', 'Leads']].head(5), use_container_width=True)
