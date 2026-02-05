@@ -4,12 +4,12 @@ services:
   dashboard-analise:
     image: python:3.9-slim
     container_name: dashboard_analise_container
+    restart: always
+    ports:
+      - "8501:8501"
     volumes:
       - .:/app
     working_dir: /app
-    ports:
-      - "8501:8501"
     command: >
       sh -c "pip install streamlit pandas facebook-business google-api-python-client &&
              streamlit run app.py --server.port=8501 --server.address=0.0.0.0"
-    restart: always
