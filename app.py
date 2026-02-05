@@ -2,115 +2,119 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from datetime import datetime, timedelta
+import plotly.graph_objects as go
 
-# 1. SETUP DE ALTA PERFORMANCE
-st.set_page_config(page_title="LAUNCHBI | Intelligence Hub", layout="wide")
+# 1. CONFIGURAÇÃO DE ALTA PERFORMANCE
+st.set_page_config(page_title="LAUNCHBI | Command Center", layout="wide")
 
-# CSS para forçar o visual SaaS (Fundo #050810 e bordas Glow)
+# 2. CSS CUSTOMIZADO (VISUAL COMMAND CENTER)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
     
-    html, body, [class*="css"] { font-family: 'Quicksand', sans-serif !important; }
-    .main { background-color: #050810; color: #ffffff; }
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
+    .main { background-color: #11141d; color: #e2e8f0; }
     
-    /* Menu Lateral Dark */
+    /* Sidebar Estilo Minimalista */
     section[data-testid="stSidebar"] {
-        background-color: #0a0e1a !important;
-        border-right: 1px solid #1e293b;
-    }
-
-    /* Cards com Glow Azul Elétrico */
-    div[data-testid="stMetric"] {
-        background-color: #0d1221;
-        border: 1px solid #1e293b;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
+        background-color: #1a1f2c !important;
+        border-right: 1px solid #2d3748;
     }
     
-    /* Botões do Menu Lateral estilo SaaS */
-    .stButton>button {
-        width: 100%;
+    /* Cards com Degradê e Bordas Suaves */
+    div[data-testid="stMetric"] {
+        background: linear-gradient(145deg, #1e2533, #161b26);
+        border: 1px solid #2d3748;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Botões de Período (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: #1a1f2c;
+        padding: 10px;
         border-radius: 12px;
-        background-color: transparent;
-        border: 1px solid #1e293b;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 40px;
+        background-color: #2d3748;
+        border-radius: 8px;
         color: #94a3b8;
-        text-align: left;
-        padding: 10px 20px;
-        font-weight: 600;
+        border: none;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #3b82f6 !important;
+        color: white !important;
     }
 
-    .stButton>button:hover {
-        border-color: #3b82f6;
-        color: #3b82f6;
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    h1, h2, h3 { font-style: italic; text-transform: uppercase; color: #3b82f6; letter-spacing: -1px; }
+    h1, h2 { font-weight: 600; letter-spacing: -0.5px; color: #ffffff; }
+    p { color: #94a3b8; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- GERADOR DE DADOS CORRIGIDO (EVITA O VALUEERROR) ---
-def get_safe_data():
-    np.random.seed(42)
-    # Criamos listas com exatamente o mesmo tamanho (24 itens para 24 horas)
-    horas = list(range(24))
-    leads_por_hora = np.random.randint(20, 150, 24).tolist()
-    
-    df_time = pd.DataFrame({'Hora': horas, 'Volume': leads_por_hora})
-    
-    # Lista separada para o mapa (6 países)
-    paises = ['Brazil', 'Portugal', 'United States', 'Angola', 'Japan', 'Spain']
-    leads_mapa = [180, 65, 42, 38, 25, 12]
-    df_map = pd.DataFrame({'Pais': paises, 'Leads': leads_mapa})
-    
-    return df_time, df_map
+# --- DADOS ---
+def get_data():
+    df_vendas = pd.DataFrame({
+        'Dia': ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'],
+        'Valor': [45, 90, 35, 38, 65, 95, 160]
+    })
+    return df_vendas
 
-df_time, df_map = get_safe_data()
+df_vendas = get_data()
 
-# 2. SIDEBAR PROFISSIONAL
+# 3. SIDEBAR
 with st.sidebar:
-    st.markdown("<h1 style='font-size: 26px; margin-bottom: 30px;'>LAUNCHBI</h1>", unsafe_allow_html=True)
-    st.button("📊 DASHBOARD")
-    st.button("🎯 PESQUISA LEADS")
-    st.button("📈 TRÁFEGO PAGO")
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #64748b; font-size: 12px;'>PROJETO ATUAL</p>", unsafe_allow_html=True)
-    projeto = st.selectbox("", ["PROJETO RULIAN", "CONFEITARIA PRO"], label_visibility="collapsed")
+    st.markdown("<h1 style='color: #3b82f6; font-size: 24px;'>LAUNCHBI</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px;'>---</p>", unsafe_allow_html=True)
+    st.button("📋 VISÃO GERAL")
+    st.button("📈 FINANÇAS")
+    st.button("👥 CLIENTES")
+    st.button("📦 PRODUTOS")
+    st.button("⚙️ CONFIGURAÇÕES")
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.selectbox("PROJETO ATUAL", ["PROJETO RULIAN", "CONFEITARIA PRO"])
+    st.button("➡️ SAIR")
+
+# 4. ÁREA PRINCIPAL
+st.title("Command Center.")
+st.markdown("Análise de performance e mix de inteligência comercial.")
+
+# TABS DE FILTRO DE TEMPO (Igual à imagem)
+tabs = st.tabs(["HOJE", "7 DIAS", "30 DIAS", "MÊS ATUAL", "ANTERIOR", "TOTAL"])
+
+with tabs[1]: # Aba de 7 Dias ativa
+    st.markdown("### 4. PERIODOS REALIZADOS")
     
+    # KPIs EM CARDS (Estilo Faturamento Bruto)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("FATURAMENTO BRUTO", "R$ 360,19", "Fluxo de Entrada")
+    with c2:
+        st.metric("SALDO LÍQUIDO", "R$ 330,67", "Caixa Real")
+    with c3:
+        st.metric("VOLUME OPERAÇÃO", "R$ 29,52", "3 Transações")
+
     st.markdown("---")
-    st.subheader("🔑 META ADS")
-    token = st.text_input("Token", type="password")
-    ad_id = st.text_input("Account ID")
-
-# 3. ÁREA PRINCIPAL
-st.markdown(f"<p style='color: #3b82f6; font-size: 14px; font-weight: 700;'>PROJETO: {projeto} | CAMPANHA: LC14</p>", unsafe_allow_html=True)
-st.title("INTELLIGENCE HUB")
-
-# KPI'S COM DESIGN MODERNO
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("INVESTIMENTO (7D)", "R$ 4.184,56", "Meta Ads")
-m2.metric("TAXA DE RESPOSTA", "42%", "85 Respondentes")
-m3.metric("LEADS QUALIFICADOS", "142", "Aprovados IA")
-m4.metric("CPL MÉDIO", "R$ 4,12", "Saudável")
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# GRÁFICOS LADO A LADO
-g1, g2 = st.columns([1.5, 1])
-
-with g1:
-    st.subheader("🌐 ALCANCE GLOBAL")
-    fig_map = px.choropleth(df_map, locations='Pais', locationmode='country names', color='Leads',
-                            color_continuous_scale=['#0d1221', '#3b82f6'], template='plotly_dark')
-    fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-    st.plotly_chart(fig_map, use_container_width=True)
-
-with g2:
-    st.subheader("⏰ PICO DE ENTRADA (24H)")
-    fig_time = px.area(df_time, x='Hora', y='Volume', template='plotly_dark')
-    fig_time.update_traces(line_color='#3b82f6', fillcolor='rgba(59, 130, 246, 0.1)')
-    fig_time.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-    st.plotly_chart(fig_time, use_container_width=True)
+    
+    # GRÁFICOS INFERIORES
+    col_vendas, col_pagamento = st.columns(2)
+    
+    with col_vendas:
+        st.markdown("#### ATIVIDADE DE VENDAS (Diário)")
+        fig_vendas = px.bar(df_vendas, x='Dia', y='Valor', 
+                            template='plotly_dark', color_discrete_sequence=['#3b82f6'])
+        fig_vendas.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                                 margin=dict(l=0, r=0, t=20, b=0), height=300)
+        st.plotly_chart(fig_vendas, use_container_width=True)
+        
+    with col_pagamento:
+        st.markdown("#### MIX DE PAGAMENTO")
+        fig_donut = px.pie(values=[70, 30], names=['CRÉDITO', 'PIX'], hole=0.6,
+                           color_discrete_sequence=['#3b82f6', '#6366f1'], template='plotly_dark')
+        fig_donut.update_layout(margin=dict(l=0, r=0, t=20, b=0), showlegend=False, 
+                                paper_bgcolor='rgba(0,0,0,0)', height=300)
+        st.plotly_chart(fig_donut, use_container_width=True)
