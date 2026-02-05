@@ -70,7 +70,7 @@ st.markdown("""
 
 # --- FUNÇÃO PARA BUSCAR DADOS DO N8N ---
 def fetch_n8n_data(projeto_id, campaign):
-    # Substitua pela sua URL de Produção do Webhook do n8n
+    # ATENÇÃO: Substitua 'sua-url-aqui' pela Production URL do nó Webhook no seu n8n
     url = "http://65.108.148.196:5678/webhook/sua-url-aqui" 
     params = {"id": projeto_id, "campaign": campaign}
     
@@ -79,8 +79,8 @@ def fetch_n8n_data(projeto_id, campaign):
         if response.status_code == 200:
             return pd.DataFrame(response.json())
         return pd.DataFrame()
-    except:
-        # Se falhar, retorna vazio para não quebrar o layout
+    except Exception as e:
+        # Silencia o erro para manter a interface limpa se o n8n estiver offline
         return pd.DataFrame()
 
 # --- DADOS ESTÁTICOS (DASHBOARD) ---
@@ -108,7 +108,7 @@ with st.sidebar:
         st.session_state.menu_ativo = "Tráfego Pago"
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
-    # IDs de projeto vinculados ao seu Postgres
+    # IDs configurados conforme a estrutura do seu Postgres
     projeto_opcoes = {"PROJETO RULIAN": 15, "CONFEITARIA PRO": 16}
     projeto_selecionado = st.selectbox("PROJETO ATUAL", list(projeto_opcoes.keys()))
     projeto_id = projeto_opcoes[projeto_selecionado]
@@ -146,41 +146,53 @@ if st.session_state.menu_ativo == "Dashboard":
 
 elif st.session_state.menu_ativo == "Pesquisa Leads":
     st.title("Intelligence Leads.")
-    st.markdown(f"Dados reais consultados via n8n para a campanha **{campanha}**.")
+    st.markdown(f"Monitoramento qualitativo para a campanha **{campanha}**.")
     
-    # Busca dados reais do seu fluxo n8n
+    # Busca dados reais do seu fluxo n8n conectado ao Postgres
     df_leads_real = fetch_n8n_data(projeto_id, campanha)
     
     if not df_leads_real.empty:
-        # KPIs REAIS
+        # KPIs REAIS EXTRAÍDOS DO BANCO
         l1, l2, l3, l4 = st.columns(4)
         l1.metric("LEADS TOTAIS", len(df_leads_real), "Base Postgres")
-        l2.metric("IDADE MÉDIA", f"{int(df_leads_real['idade'].astype(int).mean())} anos")
-        l3.metric("ORIGEM PREDOMINANTE", df_leads_real['utm_source'].mode()[0])
-        l4.metric("DEVICE (MOBILE)", f"{len(df_leads_real[df_leads_real['dispositivo']=='Celular'])} leads")
+        
+        # Cálculo dinâmico de idade média
+        if 'idade' in df_leads_real.columns:
+            idade_media = int(df_leads_real['idade'].astype(int).mean())
+            l2.metric("IDADE MÉDIA", f"{idade_media} anos")
+        else:
+            l2.metric("IDADE MÉDIA", "N/A")
+            
+        l3.metric("ORIGEM PREDOMINANTE", df_leads_real['utm_source'].mode()[0] if 'utm_source' in df_leads_real.columns else "N/A")
+        
+        if 'dispositivo' in df_leads_real.columns:
+            l4.metric("DEVICE (MOBILE)", f"{len(df_leads_real[df_leads_real['dispositivo']=='Celular'])} leads")
+        else:
+            l4.metric("DEVICE (MOBILE)", "N/A")
 
         st.markdown("---")
 
         g1, g2 = st.columns(2)
         with g1:
             st.markdown("#### 🌎 Leads por Estado")
-            fig_estado = px.bar(df_leads_real.groupby('estado').size().reset_index(name='Qtd'), 
-                                x='estado', y='Qtd', template='plotly_dark', color_discrete_sequence=['#3b82f6'])
-            fig_estado.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_estado, use_container_width=True)
+            if 'estado' in df_leads_real.columns:
+                fig_estado = px.bar(df_leads_real.groupby('estado').size().reset_index(name='Qtd'), 
+                                    x='estado', y='Qtd', template='plotly_dark', color_discrete_sequence=['#3b82f6'])
+                fig_estado.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig_estado, use_container_width=True)
 
         with g2:
             st.markdown("#### ⏰ Horário de Cadastro")
-            # Usa a coluna hora_cadastro que vi no seu n8n
-            fig_hora = px.area(df_leads_real.groupby('hora_cadastro').size().reset_index(name='Qtd'), 
-                               x='hora_cadastro', y='Qtd', template='plotly_dark')
-            fig_hora.update_traces(line_color='#3b82f6', fillcolor='rgba(59, 130, 246, 0.2)')
-            fig_hora.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_hora, use_container_width=True)
+            if 'hora_cadastro' in df_leads_real.columns:
+                fig_hora = px.area(df_leads_real.groupby('hora_cadastro').size().reset_index(name='Qtd'), 
+                                   x='hora_cadastro', y='Qtd', template='plotly_dark')
+                fig_hora.update_traces(line_color='#3b82f6', fillcolor='rgba(59, 130, 246, 0.2)')
+                fig_hora.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig_hora, use_container_width=True)
 
         st.dataframe(df_leads_real, use_container_width=True)
     else:
-        st.warning("Nenhum dado encontrado para este projeto/campanha ou Webhook offline.")
+        st.warning("Aguardando dados ou Webhook offline. Verifique a URL de produção no código.")
 
 elif st.session_state.menu_ativo == "Tráfego Pago":
     st.title("Performance Tráfego.")
