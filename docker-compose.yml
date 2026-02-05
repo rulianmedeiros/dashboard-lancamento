@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dashboard-analise:
     image: python:3.9-slim
@@ -10,4 +8,12 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: python app.py
+    command: >
+      sh -c "pip install streamlit pandas plotly && 
+             streamlit run app.py --server.port=8501 --server.address=0.0.0.0"
+    networks:
+      - dash_net_pro
+
+networks:
+  dash_net_pro:
+    driver: bridge
