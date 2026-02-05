@@ -71,7 +71,7 @@ st.markdown("""
 # --- FUNÇÃO PARA BUSCAR DADOS DO N8N ---
 def fetch_n8n_data(projeto_id, campaign):
     # ATENÇÃO: Substitua 'sua-url-aqui' pela Production URL do nó Webhook no seu n8n
-    url = "http://65.108.148.196:5678/webhook/sua-url-aqui" 
+    url = "https://n8n.rulianmedeiros.com/webhook/busca-leads" 
     params = {"id": projeto_id, "campaign": campaign}
     
     try:
