@@ -11,5 +11,5 @@ services:
       - .:/app
     working_dir: /app
     command: >
-      sh -c "pip install streamlit pandas facebook-business google-api-python-client &&
+      sh -c "pip install --no-cache-dir streamlit pandas facebook-business google-api-python-client && 
              streamlit run app.py --server.port=8501 --server.address=0.0.0.0"
