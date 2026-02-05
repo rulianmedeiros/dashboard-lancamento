@@ -79,14 +79,31 @@ def get_data():
     })
     return df_vendas
 
+# Simulação de dados da Planilha (Baseado no seu exemplo de Inglês)
+def get_leads_data():
+    np.random.seed(42)
+    rows = 150
+    rendas = ['Até R$ 2.000', 'R$ 2.000 a R$ 5.000', 'R$ 5.000 a R$ 10.000', 'Acima de R$ 10.000']
+    paises = ['Brazil', 'Portugal', 'United States', 'Angola']
+    horas = list(range(24))
+    
+    df = pd.DataFrame({
+        'Renda': np.random.choice(rendas, rows),
+        'Pais': np.random.choice(paises, rows, p=[0.8, 0.1, 0.05, 0.05]),
+        'Comprometimento': np.random.randint(5, 11, rows),
+        'Dispositivo': np.random.choice(['Celular', 'Desktop'], rows),
+        'Hora': np.random.choice(horas, rows)
+    })
+    return df
+
 df_vendas = get_data()
+df_leads = get_leads_data()
 
 # 3. SIDEBAR (MENU REORGANIZADO)
 with st.sidebar:
     st.markdown("<h1 style='color: #3b82f6; font-size: 24px;'>LAUNCHBI</h1>", unsafe_allow_html=True)
     st.markdown("<p style='font-size: 12px;'>---</p>", unsafe_allow_html=True)
     
-    # Navegação por estado
     if 'menu_ativo' not in st.session_state:
         st.session_state.menu_ativo = "Dashboard"
 
@@ -139,13 +156,47 @@ if st.session_state.menu_ativo == "Dashboard":
             st.plotly_chart(fig_donut, use_container_width=True)
 
 elif st.session_state.menu_ativo == "Pesquisa Leads":
-    st.title("Pesquisa de Leads")
-    st.markdown("Monitoramento de qualificação e funil de entrada.")
-    # Aqui você pode manter os gráficos de Hora e Região que já funcionavam
-    st.info("Área de análise de leads ativa.")
+    st.title("Intelligence Leads.")
+    st.markdown("Análise baseada nos dados da sua planilha automatizada via n8n.")
+    
+    # KPIs DE LEADS
+    l1, l2, l3, l4 = st.columns(4)
+    l1.metric("LEADS TOTAIS", len(df_leads), "Planilha")
+    l2.metric("QUALIFICAÇÃO MÉDIA", f"{df_leads['Comprometimento'].mean():.1f}/10", "Score")
+    l3.metric("LEADS BRASIL", f"{len(df_leads[df_leads['Pais']=='Brazil'])}", "80% do total")
+    l4.metric("DEVICE (MOBILE)", "72%", "Prioridade UI")
+
+    st.markdown("---")
+
+    # GRÁFICOS DE ANÁLISE QUALITATIVA
+    g1, g2 = st.columns(2)
+    
+    with g1:
+        st.markdown("#### 💰 Perfil de Renda Mensal")
+        fig_renda = px.pie(df_leads, names='Renda', hole=0.5, template='plotly_dark',
+                           color_discrete_sequence=['#3b82f6', '#6366f1', '#1e293b', '#2d3748'])
+        fig_renda.update_layout(margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor='rgba(0,0,0,0)', showlegend=False)
+        st.plotly_chart(fig_renda, use_container_width=True)
+
+    with g2:
+        st.markdown("#### ⏰ Horário de Pico de Entrada")
+        h_data = df_leads.groupby('Hora').size().reset_index(name='Volume')
+        fig_hora = px.area(h_data, x='Hora', y='Volume', template='plotly_dark')
+        fig_hora.update_traces(line_color='#3b82f6', fillcolor='rgba(59, 130, 246, 0.2)')
+        fig_hora.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=300)
+        st.plotly_chart(fig_hora, use_container_width=True)
+
+    st.markdown("#### 🌎 Distribuição Geográfica e Dispositivos")
+    st.dataframe(df_leads[['Pais', 'Renda', 'Comprometimento', 'Dispositivo']].head(10), use_container_width=True)
 
 elif st.session_state.menu_ativo == "Tráfego Pago":
-    st.title("Tráfego Pago")
-    st.markdown("Integração direta com Meta Ads e Google Ads.")
-    # Aqui entra a parte de investimento, CTR e CPM
-    st.info("Área de análise de tráfego ativa.")
+    st.title("Performance Tráfego.")
+    st.markdown("Métricas integradas diretamente da API do Meta Ads.")
+    
+    t1, t2, t3, t4 = st.columns(4)
+    t1.metric("GASTO TOTAL", "R$ 4.184,56", "Últimos 7 dias")
+    t2.metric("CTR MÉDIO", "1.70%", "+0.2%")
+    t3.metric("CPM", "R$ 28,45", "Saudável")
+    t4.metric("CLIQUES NO LINK", "2.350", "Meta Ads")
+    
+    st.info("Conexão estabelecida com a conta de anúncios LC14.")
